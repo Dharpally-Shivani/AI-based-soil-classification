@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<title>AI Soil Classification & Crop Recommendation</title>
+
+<style>
+body{
+font-family: Arial, sans-serif;
+background: linear-gradient(to right,#56ab2f,#a8e063);
+text-align:center;
+padding:50px;
+}
+
+.container{
+background:white;
+padding:40px;
+border-radius:15px;
+width:520px;
+margin:auto;
+box-shadow:0px 10px 25px rgba(0,0,0,0.3);
+}
+
+h1{
+color:#2e7d32;
+}
+
+input,select{
+margin:15px 0;
+padding:6px;
+}
+
+button{
+background-color:#2e7d32;
+color:white;
+padding:10px 20px;
+border:none;
+border-radius:8px;
+font-size:16px;
+cursor:pointer;
+}
+
+button:hover{
+background-color:#1b5e20;
+}
+
+.result{
+margin-top:25px;
+font-size:22px;
+color:#d84315;
+font-weight:bold;
+}
+
+.confidence{
+margin-top:10px;
+font-size:18px;
+}
+
+ul{
+list-style-type:none;
+padding:0;
+}
+
+li{
+background:#e8f5e9;
+margin:5px;
+padding:8px;
+border-radius:6px;
+}
+
+img{
+margin-top:20px;
+border-radius:10px;
+max-width:200px;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>🌱 AI-Based Soil Classification System</h1>
+
+<p>Upload soil image to predict soil type and get crop recommendations</p>
+
+<form action="/predict" method="post" enctype="multipart/form-data">
+
+<input type="file" name="file" required><br>
+
+<label>Select Voice Language</label><br>
+
+<select id="language">
+<option value="en">English</option>
+<option value="hi">हिन्दी</option>
+<option value="te">తెలుగు</option>
+<option value="ta">தமிழ்</option>
+</select>
+
+<br><br>
+
+<button type="submit">Predict Soil</button>
+
+</form>
+
+{% if prediction %}
+
+<img src="{{ image_path }}">
+
+<div class="result">
+Predicted Soil Type: {{ prediction }}
+</div>
+
+<div class="confidence">
+Confidence: {{ confidence }}%
+</div>
+
+<h3>🌾 Recommended Crops</h3>
+
+<ul>
+{% for crop in crops %}
+<li>{{ crop }}</li>
+{% endfor %}
+</ul>
+
+<button onclick="speakResult()">🔊 Speak Result</button>
+
+<script>
+
+function speakResult(){
+
+let soil = "{{ prediction }}";
+let crops = [{% for crop in crops %}"{{ crop }}",{% endfor %}];
+
+let lang = document.getElementById("language").value;
+
+/* TELUGU */
+
+let soil_te = {
+black:"నల్ల మట్టి",
+clay:"మట్టి",
+loamy:"లోమీ మట్టి",
+red:"ఎర్ర మట్టి",
+sandy:"ఇసుక మట్టి"
+};
+
+let crop_te = {
+Cotton:"పత్తి",
+Sugarcane:"చెరకు",
+Wheat:"గోధుమ",
+Sunflower:"సూర్యకాంతి",
+Rice:"బియ్యం",
+Cabbage:"క్యాబేజీ",
+Broccoli:"బ్రోకోలీ",
+Lettuce:"లెట్యూస్",
+Vegetables:"కూరగాయలు",
+Pulses:"పప్పులు",
+Groundnut:"వేరుశెనగ",
+Millet:"జొన్న",
+Potato:"బంగాళాదుంప",
+Carrot:"క్యారెట్",
+Radish:"ముల్లంగి",
+Watermelon:"పుచ్చకాయ"
+};
+
+/* HINDI */
+
+let soil_hi={
+black:"काली मिट्टी",
+clay:"चिकनी मिट्टी",
+loamy:"दोमट मिट्टी",
+red:"लाल मिट्टी",
+sandy:"रेतीली मिट्टी"
+};
+
+let crop_hi={
+Cotton:"कपास",
+Sugarcane:"गन्ना",
+Wheat:"गेहूं",
+Sunflower:"सूरजमुखी",
+Rice:"चावल",
+Cabbage:"पत्ता गोभी",
+Broccoli:"ब्रोकोली",
+Lettuce:"सलाद पत्ता",
+Vegetables:"सब्जियां",
+Pulses:"दालें",
+Groundnut:"मूंगफली",
+Millet:"बाजरा",
+Potato:"आलू",
+Carrot:"गाजर",
+Radish:"मूली",
+Watermelon:"तरबूज"
+};
+
+/* TAMIL */
+
+let soil_ta={
+black:"கருப்பு மண்",
+clay:"சேறு மண்",
+loamy:"லோமி மண்",
+red:"சிவப்பு மண்",
+sandy:"மணல் மண்"
+};
+
+let crop_ta={
+Cotton:"பருத்தி",
+Sugarcane:"கரும்பு",
+Wheat:"கோதுமை",
+Sunflower:"சூரியகாந்தி",
+Rice:"அரிசி",
+Cabbage:"முட்டைகோஸ்",
+Broccoli:"ப்ரோக்கோலி",
+Lettuce:"லெட்டுஸ்",
+Vegetables:"காய்கறிகள்",
+Pulses:"பருப்புகள்",
+Groundnut:"வேர்க்கடலை",
+Millet:"கம்பு",
+Potato:"உருளைக்கிழங்கு",
+Carrot:"கேரட்",
+Radish:"முள்ளங்கி",
+Watermelon:"தர்பூசணி"
+};
+
+let message="";
+let speechLang="en-US";
+
+if(lang==="en"){
+message="The predicted soil type is "+soil+". Recommended crops are "+crops.join(", ");
+speechLang="en-US";
+}
+
+else if(lang==="te"){
+let soilName=soil_te[soil];
+let cropNames=crops.map(c=>crop_te[c]);
+message="ఈ మట్టి రకం "+soilName+". సూచించిన పంటలు "+cropNames.join(", ");
+speechLang="te-IN";
+}
+
+else if(lang==="hi"){
+let soilName=soil_hi[soil];
+let cropNames=crops.map(c=>crop_hi[c]);
+message="मिट्टी का प्रकार "+soilName+" है। अनुशंसित फसलें "+cropNames.join(", ");
+speechLang="hi-IN";
+}
+
+else if(lang==="ta"){
+let soilName=soil_ta[soil];
+let cropNames=crops.map(c=>crop_ta[c]);
+message="இந்த மண் வகை "+soilName+". பரிந்துரைக்கப்பட்ட பயிர்கள் "+cropNames.join(", ");
+speechLang="ta-IN";
+}
+
+let speech=new SpeechSynthesisUtterance(message);
+speech.lang=speechLang;
+
+window.speechSynthesis.speak(speech);
+
+}
+
+</script>
+
+
+{% endif %}
+
+</div>
+
+</body>
+</html>
